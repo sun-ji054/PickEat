@@ -1,0 +1,10 @@
+.env
+myvenv/
+db.sqlite3
+__pycache__/
+*.pyc
+*.pyo
+.vscode/
+.DS_Store
+Thumbs.db
+staticfiles/
