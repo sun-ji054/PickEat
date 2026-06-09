@@ -47,6 +47,11 @@ class RecommendRequestSerializer(serializers.Serializer):
         allow_blank=True,
         default='',
     )
+    excluded_naver_ids = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        default=list,
+    )
 
     def validate(self, data):
         if not data.get('food_types') and not data.get('moods'):

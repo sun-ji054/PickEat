@@ -4,7 +4,7 @@ import google.generativeai as genai
 from django.conf import settings
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from .models import Restaurant, SavedRestaurant
@@ -17,7 +17,7 @@ from .constants import FOOD_TYPES, MOODS, DISTANCES, MEAL_SITUATIONS
 
 
 class KeywordOptionsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         return Response({
@@ -29,20 +29,21 @@ class KeywordOptionsView(APIView):
 
 
 class RecommendView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         req_ser = RecommendRequestSerializer(data=request.data)
         if not req_ser.is_valid():
             return Response(req_ser.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        data           = req_ser.validated_data
-        food_types     = data['food_types']
-        moods          = data['moods']
-        distance       = data['distance']
-        meal_situation = data['meal_situation']
+        data                = req_ser.validated_data
+        food_types          = data['food_types']
+        moods               = data['moods']
+        distance            = data['distance']
+        meal_situation      = data['meal_situation']
+        excluded_naver_ids  = data.get('excluded_naver_ids', [])
 
-        restaurants_qs      = Restaurant.objects.all().values('naver_id', 'name')
+        restaurants_qs = Restaurant.objects.exclude(naver_id__in=excluded_naver_ids).values('naver_id', 'name')
         restaurant_list_str = '\n'.join(
             f'{r["naver_id"]},{r["name"]}' for r in restaurants_qs
         )
@@ -122,6 +123,7 @@ class RecommendView(APIView):
             extras = (
                 Restaurant.objects
                 .exclude(id__in=used_ids)
+                .exclude(naver_id__in=excluded_naver_ids)
                 .order_by('?')[:3 - len(result)]
             )
             for restaurant in extras:

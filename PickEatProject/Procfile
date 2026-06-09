@@ -1,1 +1,1 @@
-web: python manage.py migrate && gunicorn PickEatProject.wsgi
+cd PickEatProject && python manage.py migrate && gunicorn PickEatProject.wsgi
